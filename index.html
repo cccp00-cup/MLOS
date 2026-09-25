@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>macOS 风格桌面套件 · for Linux</title>
+<meta name="description" content="macOS 风格的 KDE Plasma 6 / Wayland 桌面套件：程序坞、灵动岛、启动台、顶部菜单栏。提供 .deb 一键安装。">
+<style>
+  :root{
+    --bg:#0b0d12;
+    --bg2:#111420;
+    --card:rgba(255,255,255,.055);
+    --card-brd:rgba(255,255,255,.10);
+    --card-brd-hi:rgba(255,255,255,.22);
+    --fg:#eef1f7;
+    --fg-dim:#9aa4b8;
+    --fg-dim2:#6e7893;
+    --accent:#3b82f6;
+    --accent2:#8b5cf6;
+    --ok:#34d399;
+    --radius:18px;
+    --maxw:1080px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+                "Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",system-ui,sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+  /* 背景光晕 */
+  body::before{
+    content:"";
+    position:fixed; inset:-30% -10% auto -10%; height:80vh; z-index:0;
+    background:
+      radial-gradient(42% 55% at 22% 18%, rgba(59,130,246,.24), transparent 70%),
+      radial-gradient(38% 50% at 78% 8%,  rgba(139,92,246,.22), transparent 70%),
+      radial-gradient(30% 40% at 50% 40%, rgba(16,185,129,.10), transparent 70%);
+    filter:blur(10px);
+    pointer-events:none;
+  }
+  .wrap{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding:64px 22px 72px}
+
+  /* ---------- 头部 ---------- */
+  header{text-align:center; margin-bottom:44px}
+  .logo{
+    font-size:44px; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:84px; height:84px; margin-bottom:18px;
+    border-radius:24px;
+    background:linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+    border:1px solid var(--card-brd);
+    box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18);
+  }
+  h1{
+    font-size:clamp(27px,4.6vw,42px);
+    margin:0 0 12px; letter-spacing:-.02em; font-weight:700;
+    background:linear-gradient(100deg,#fff 10%,#b9c6ff 55%,#d9b9ff 95%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .sub{color:var(--fg-dim); font-size:clamp(14px,2vw,17px); margin:0 auto 22px; max-width:640px}
+  .chips{display:flex; gap:9px; justify-content:center; flex-wrap:wrap}
+  .chip{
+    font-size:12.5px; color:var(--fg-dim);
+    padding:6px 13px; border-radius:999px;
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--card-brd);
+    white-space:nowrap;
+  }
+  .chip b{color:#cdd6ea; font-weight:600}
+
+  /* ---------- 卡片网格 ---------- */
+  .grid{
+    display:grid; gap:20px;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  }
+  .card{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--card-brd);
+    border-radius:var(--radius);
+    padding:24px 22px 20px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 12px 34px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.07);
+    transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+    display:flex; flex-direction:column;
+  }
+  .card:hover{
+    transform:translateY(-4px);
+    border-color:var(--card-brd-hi);
+    box-shadow:0 22px 54px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  .card-top{display:flex; align-items:center; gap:14px; margin-bottom:14px}
+  .ico{
+    flex:0 0 auto;
+    width:52px; height:52px; border-radius:15px;
+    display:flex; align-items:center; justify-content:center; font-size:27px;
+    border:1px solid var(--card-brd);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 6px 16px rgba(0,0,0,.28);
+  }
+  .ico.dock{background:linear-gradient(150deg,#2f6df6,#1b3f9e)}
+  .ico.island{background:linear-gradient(150deg,#7c3aed,#3b1f7a)}
+  .ico.launchpad{background:linear-gradient(150deg,#10b981,#0a6b4d)}
+  .ico.topbar{background:linear-gradient(150deg,#f59e0b,#a35a06)}
+  .names{min-width:0}
+  .name{font-size:17.5px; font-weight:650; letter-spacing:-.01em}
+  .ename{font-size:12.5px; color:var(--fg-dim2); letter-spacing:.02em}
+  .desc{color:var(--fg-dim); font-size:13.6px; margin:0 0 16px; flex:1}
+
+  .tags{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:16px}
+  .tag{
+    font-size:11.5px; color:#c3ccdf;
+    padding:3.5px 9px; border-radius:7px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+  }
+
+  .file{
+    font-size:11.5px; color:var(--fg-dim2);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    margin-bottom:12px; word-break:break-all;
+  }
+  .file .sz{color:var(--fg-dim)}
+
+  .row{display:flex; gap:9px; align-items:center}
+  .btn{
+    flex:1; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px 16px; border-radius:12px;
+    font-size:14.5px; font-weight:600; color:#fff; text-decoration:none;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow:0 8px 22px rgba(59,130,246,.32), inset 0 1px 0 rgba(255,255,255,.25);
+    transition:filter .18s ease, transform .12s ease, box-shadow .18s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{filter:brightness(1.10); box-shadow:0 12px 30px rgba(99,102,241,.44), inset 0 1px 0 rgba(255,255,255,.3)}
+  .btn:active{transform:translateY(1px)}
+  .btn svg{width:17px; height:17px; flex:0 0 auto}
+  .ghost{
+    flex:0 0 auto;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:42px; height:42px; border-radius:12px;
+    color:var(--fg-dim); text-decoration:none;
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--card-brd);
+    transition:color .18s ease, border-color .18s ease, background .18s ease;
+  }
+  .ghost:hover{color:#fff; border-color:var(--card-brd-hi); background:rgba(255,255,255,.10)}
+  .ghost svg{width:19px; height:19px}
+
+  /* ---------- 安装说明 ---------- */
+  .install{
+    margin-top:38px;
+    background:var(--card);
+    border:1px solid var(--card-brd);
+    border-radius:var(--radius);
+    padding:26px 24px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  .install h2{margin:0 0 6px; font-size:16.5px; font-weight:650}
+  .install p.hint{margin:0 0 16px; color:var(--fg-dim2); font-size:13px}
+  pre{
+    margin:0; padding:15px 16px; border-radius:12px; overflow-x:auto;
+    background:rgba(0,0,0,.42);
+    border:1px solid rgba(255,255,255,.08);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13px; color:#d7e0f2; line-height:1.7;
+  }
+  pre .c{color:#6e7893}
+  pre .g{color:#6ee7b7}
+  ol{margin:0; padding-left:20px; color:var(--fg-dim); font-size:13.6px}
+  ol li{margin-bottom:7px}
+  ol b{color:#cdd6ea; font-weight:600}
+  .ok{color:var(--ok)}
+
+  /* ---------- 页脚 ---------- */
+  footer{
+    margin-top:44px; text-align:center;
+    color:var(--fg-dim2); font-size:12.5px;
+  }
+  footer a{color:var(--fg-dim); text-decoration:none; border-bottom:1px solid rgba(255,255,255,.14)}
+  footer a:hover{color:#fff}
+  .sep{margin:0 8px; opacity:.4}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">🍎</div>
+    <h1>macOS 风格桌面套件</h1>
+    <p class="sub">把 macOS 的桌面体验搬到 Linux —— 程序坞、灵动岛、启动台、顶部菜单栏，
+      四个独立组件，按需安装。</p>
+    <div class="chips">
+      <span class="chip">适用系统 <b>KDE Plasma 6</b></span>
+      <span class="chip">会话 <b>Wayland</b></span>
+      <span class="chip">依赖 <b>Qt 6.5+</b></span>
+      <span class="chip">架构 <b>amd64</b></span>
+    </div>
+  </header>
+
+  <main class="grid">
+
+    <!-- 程序坞 -->
+    <article class="card">
+      <div class="card-top">
+        <div class="ico dock">🚢</div>
+        <div class="names">
+          <div class="name">程序坞</div>
+          <div class="ename">Dock · 26.9.25</div>
+        </div>
+      </div>
+      <p class="desc">停靠屏幕底部的程序坞：悬停鱼眼放大、运行中的应用带指示点，
+        可预览窗口缩略图并点选恢复，右侧还有废纸篓。</p>
+      <div class="tags">
+        <span class="tag">鱼眼放大</span>
+        <span class="tag">窗口预览</span>
+        <span class="tag">自动隐藏</span>
+      </div>
+      <div class="file">dock_26.9.25-1_amd64.deb <span class="sz">· 186 KB</span></div>
+      <div class="row">
+        <a class="btn" href="https://github.com/cccp00-cup/macos-dock-for-linux/releases/download/26.9.25/dock_26.9.25-1_amd64.deb" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          下载 .deb
+        </a>
+        <a class="ghost" href="https://github.com/cccp00-cup/macos-dock-for-linux" target="_blank" rel="noopener" title="GitHub 源码">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.41-1.27.74-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.25 5.69.42.36.8 1.08.8 2.18v3.24c0 .31.21.68.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+        </a>
+      </div>
+    </article>
+
+    <!-- 灵动岛 -->
+    <article class="card">
+      <div class="card-top">
+        <div class="ico island">🏝️</div>
+        <div class="names">
+          <div class="name">灵动岛</div>
+          <div class="ename">Dynamic Island · 26.9.25</div>
+        </div>
+      </div>
+      <p class="desc">屏幕顶部中央的小黑药丸：点开是音乐控制、通知、时钟日历与计时器，
+        点击展开、按住拖动、再运行一次命令即可收起。</p>
+      <div class="tags">
+        <span class="tag">MPRIS 音乐</span>
+        <span class="tag">通知</span>
+        <span class="tag">日历 / 计时器</span>
+      </div>
+      <div class="file">island_26.9.25-1_amd64.deb <span class="sz">· 122 KB</span></div>
+      <div class="row">
+        <a class="btn" href="https://github.com/cccp00-cup/Macos-lsland-for-linux/releases/download/26.9.25/island_26.9.25-1_amd64.deb" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          下载 .deb
+        </a>
+        <a class="ghost" href="https://github.com/cccp00-cup/Macos-lsland-for-linux" target="_blank" rel="noopener" title="GitHub 源码">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.41-1.27.74-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.25 5.69.42.36.8 1.08.8 2.18v3.24c0 .31.21.68.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+        </a>
+      </div>
+    </article>
+
+    <!-- 启动台 -->
+    <article class="card">
+      <div class="card-top">
+        <div class="ico launchpad">🚀</div>
+        <div class="names">
+          <div class="name">启动台</div>
+          <div class="ename">Launchpad · 26.9.25</div>
+        </div>
+      </div>
+      <p class="desc">macOS 经典风格的全屏应用启动台：毛玻璃壁纸背景、图标拖拽排序、
+        文件夹、横向翻页与实时搜索，左 Alt 一键呼出。</p>
+      <div class="tags">
+        <span class="tag">拖拽排序</span>
+        <span class="tag">文件夹</span>
+        <span class="tag">实时搜索</span>
+      </div>
+      <div class="file">launchpad_26.9.25-1_amd64.deb <span class="sz">· 157 KB</span></div>
+      <div class="row">
+        <a class="btn" href="https://github.com/cccp00-cup/macos-launchpad-for-linux/releases/download/v26.9.25/launchpad_26.9.25-1_amd64.deb" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          下载 .deb
+        </a>
+        <a class="ghost" href="https://github.com/cccp00-cup/macos-launchpad-for-linux" target="_blank" rel="noopener" title="GitHub 源码">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.41-1.27.74-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.25 5.69.42.36.8 1.08.8 2.18v3.24c0 .31.21.68.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+        </a>
+      </div>
+    </article>
+
+    <!-- 顶部菜单栏 -->
+    <article class="card">
+      <div class="card-top">
+        <div class="ico topbar">🖥️</div>
+        <div class="names">
+          <div class="name">顶部菜单栏</div>
+          <div class="ename">TopBar · 1.0.0</div>
+        </div>
+      </div>
+      <p class="desc">顶部的 macOS 风格菜单栏，替代系统顶部面板：左侧苹果菜单与前台应用菜单，
+        右侧 Wi-Fi / 蓝牙 / 电池、控制中心、时钟日历与 Spotlight 搜索。</p>
+      <div class="tags">
+        <span class="tag">苹果菜单</span>
+        <span class="tag">控制中心</span>
+        <span class="tag">Spotlight</span>
+      </div>
+      <div class="file">topbar_1.0.0-1_amd64.deb <span class="sz">· 180 KB</span></div>
+      <div class="row">
+        <a class="btn" href="https://github.com/cccp00-cup/macos-topbar-for-liunx/releases/download/v26.9.25/topbar_1.0.0-1_amd64.deb" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          下载 .deb
+        </a>
+        <a class="ghost" href="https://github.com/cccp00-cup/macos-topbar-for-liunx" target="_blank" rel="noopener" title="GitHub 源码">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.41-1.27.74-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.25 5.69.42.36.8 1.08.8 2.18v3.24c0 .31.21.68.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+        </a>
+      </div>
+    </article>
+
+  </main>
+
+  <!-- 安装说明 -->
+  <section class="install">
+    <h2>安装方法</h2>
+    <p class="hint">下载得到 .deb 后，任选一种方式安装（会自动装齐依赖）：</p>
+
+    <ol>
+      <li><b>图形方式：</b>双击 .deb → 在「软件商店 / Discover」里点安装，输入密码即可。</li>
+      <li><b>命令行（最稳）：</b></li>
+    </ol>
+    <pre><span class="c"># 以程序坞为例；其它组件把文件名换成对应的即可</span>
+<span class="g">sudo apt install</span> ./dock_26.9.25-1_amd64.deb</pre>
+
+    <p class="hint" style="margin:16px 0 0">这是本地 .deb，没有 GPG 签名，安装时出现「不受信任 / 未签名」提示属正常，
+      确认继续即可。<span class="ok">用 apt 安装比双击更可靠地处理依赖。</span></p>
+
+    <p class="hint" style="margin:14px 0 0">卸载：<code style="color:#cdd6ea">sudo apt remove dock</code>
+      （把 <code style="color:#cdd6ea">dock</code> 换成 <code style="color:#cdd6ea">island</code> /
+      <code style="color:#cdd6ea">launchpad</code> / <code style="color:#cdd6ea">topbar</code>）。
+      其它发行版（Arch / Fedora / openSUSE…）请从各仓库源码构建。</p>
+  </section>
+
+  <footer>
+    四个组件均为 GPL-3.0 · 面向 KDE Plasma 6 / Wayland<br>
+    <a href="https://github.com/cccp00-cup" target="_blank" rel="noopener">github.com/cccp00-cup</a>
+    <span class="sep">·</span>
+    <a href="https://github.com/cccp00-cup/macos-dock-for-linux/releases" target="_blank" rel="noopener">程序坞</a>
+    <span class="sep">·</span>
+    <a href="https://github.com/cccp00-cup/Macos-lsland-for-linux/releases" target="_blank" rel="noopener">灵动岛</a>
+    <span class="sep">·</span>
+    <a href="https://github.com/cccp00-cup/macos-launchpad-for-linux/releases" target="_blank" rel="noopener">启动台</a>
+    <span class="sep">·</span>
+    <a href="https://github.com/cccp00-cup/macos-topbar-for-liunx/releases" target="_blank" rel="noopener">顶部菜单栏</a>
+  </footer>
+
+</div>
+</body>
+</html>
